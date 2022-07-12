@@ -1,0 +1,37 @@
+name: ekoparty dast 
+
+on: [push]
+
+jobs:
+
+  deploy-heroku:
+    name: Deploy Heroku
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
+        with:
+          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+          heroku_app_name: "ekoparty-dast" #Must be unique in Heroku
+          heroku_email: "roxsrossve@gmail.com"
+          remote_branch: "master"
+          usedocker: true
+
+  zap_scan:
+    runs-on: ubuntu-latest
+    name: Scan the webapplication
+    needs: deploy-heroku
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: master
+      - name: ZAP Scan
+        uses: zaproxy/action-baseline@v0.7.0
+        with:
+          token: ${{ secrets.GITHUBTOKEN }}
+          docker_name: 'owasp/zap2docker-stable'
+          target: 'https://ekoparty-dast.herokuapp.com/'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a'          
+
