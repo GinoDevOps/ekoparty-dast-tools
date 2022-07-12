@@ -11,7 +11,7 @@ on:
 jobs:
 
   security_sast:
-    uses: ./github/workflows/security_sast.yml
+    uses: ./.github/workflows/security_sast.yml
 
   deploy-heroku:
     name: Deploy Heroku
@@ -28,4 +28,4 @@ jobs:
           usedocker: true
 
   security_dast:
-    uses: ./github/workflows/security_dast.yml
+    uses: ./.github/workflows/security_dast.yml
