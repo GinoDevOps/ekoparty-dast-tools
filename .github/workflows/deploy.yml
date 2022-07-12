@@ -44,7 +44,7 @@ jobs:
         run: echo "hello"  
       - name: ZAP Scan
         run: |
-        docker run -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-weekly zap-api-scan.py -t https://vulxss2022.herokuapp.com/openapi.json -f openapi
+          docker run -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-weekly zap-api-scan.py -t https://vulxss2022.herokuapp.com/openapi.json -f openapi
       #   uses: zaproxy/action-api-scan@v0.1.1
       #   with:
       #     token: ${{ secrets.GITHUBTOKEN }}
