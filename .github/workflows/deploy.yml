@@ -1,6 +1,7 @@
 name: ekoparty 
 
 on:
+  workflow_dispatch:
   workflow_call:
     secrets:
       HAWK_API_KEY:
