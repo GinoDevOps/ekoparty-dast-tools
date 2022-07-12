@@ -1,1 +1,1 @@
-https://ekoparty-dast.herokuapp.com/
+https://ekoparty-dast.herokuapp.com/d
