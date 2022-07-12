@@ -4,23 +4,22 @@ on: [push]
 
 jobs:
 
-  deploy-heroku:
-    name: Deploy Heroku
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
-        with:
-          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
-          heroku_app_name: "ekoparty-dast" #Must be unique in Heroku
-          heroku_email: "roxsrossve@gmail.com"
-          remote_branch: "master"
-          usedocker: true
+  # deploy-heroku:
+  #   name: Deploy Heroku
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
+  #       with:
+  #         heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+  #         heroku_app_name: "ekoparty-dast" #Must be unique in Heroku
+  #         heroku_email: "roxsrossve@gmail.com"
+  #         remote_branch: "master"
+  #         usedocker: true
 
   zap_scan:
     runs-on: ubuntu-latest
     name: Scan the webapplication
-    needs: deploy-heroku
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -32,3 +31,19 @@ jobs:
           docker_name: 'owasp/zap2docker-stable'
           target: 'https://ekoparty-dast.herokuapp.com/'       
 
+  DAST-API:
+    name: ZAP API Scan
+    runs-on: ubuntu-latest
+    #continue-on-error: true
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: ZAP Scan
+        uses: zaproxy/action-api-scan@v0.1.1
+        with:
+          token: ${{ secrets.GITHUBTOKEN }}
+          docker_name: 'owasp/zap2docker-stable'
+          format: openapi
+          target: 'https://vulxss2022.herokuapp.com/openapi.json'
