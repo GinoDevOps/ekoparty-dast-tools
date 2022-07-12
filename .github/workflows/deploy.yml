@@ -1,62 +1,31 @@
-name: ekoparty dast 
+name: ekoparty 
 
-on: [push]
+on:
+  workflow_call:
+    secrets:
+      HAWK_API_KEY:
+        required: true
+  push:
+    branches: [master]    
 
 jobs:
 
-  # deploy-heroku:
-  #   name: Deploy Heroku
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
-  #       with:
-  #         heroku_api_key: ${{secrets.HEROKU_API_KEY}}
-  #         heroku_app_name: "ekoparty-dast" #Must be unique in Heroku
-  #         heroku_email: "roxsrossve@gmail.com"
-  #         remote_branch: "master"
-  #         usedocker: true
+  security_sast:
+    uses: ./github/workflows/security_sast.yml
 
-  zap_scan:
+  deploy-heroku:
+    name: Deploy Heroku
     runs-on: ubuntu-latest
-    name: Scan the webapplication
+    needs: security_sast
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+      - uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
         with:
-          ref: master
-      - name: ZAP Scan
-        uses: zaproxy/action-full-scan@v0.4.0
-        with:
-          docker_name: 'owasp/zap2docker-stable'
-          target: 'https://ekoparty-dast.herokuapp.com/'       
+          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+          heroku_app_name: "ekoparty-dast" #Must be unique in Heroku
+          heroku_email: "roxsrossve@gmail.com"
+          remote_branch: "master"
+          usedocker: true
 
-  DAST-API:
-    name: ZAP API Scan
-    runs-on: ubuntu-latest
-    #continue-on-error: true
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: generar token
-        run: echo "hello"  
-      - name: ZAP Scan
-        run: |
-          docker run -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-weekly zap-api-scan.py -t https://vulxss2022.herokuapp.com/openapi.json -f openapi
-      #   uses: zaproxy/action-api-scan@v0.1.1
-      #   with:
-      #     token: ${{ secrets.GITHUBTOKEN }}
-      #     docker_name: 'owasp/zap2docker-stable'
-      #     format: openapi
-      #     target: 'https://vulxss2022.herokuapp.com/openapi.json'
-
-  stackhawk-hawkscan:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3  
-    - uses: stackhawk/hawkscan-action@v2.0.0
-      with:
-        apiKey: ${{ secrets.HAWK_API_KEY }}
-        configurationFiles: stackhawk.yml
+  security_dast:
+    uses: ./github/workflows/security_dast.yml

@@ -1,0 +1,101 @@
+name: security_sast
+
+on:
+  workflow_call:
+
+
+jobs:
+  SECRET:
+    runs-on: ubuntu-latest
+    name: Secret-Scanner
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Secret Detection
+        uses: zricethezav/gitleaks-action@master
+        continue-on-error: true 
+
+  SAST:
+    runs-on: ubuntu-latest
+    name: Static-Vulnerability-Scanner
+    steps:
+      - uses: actions/checkout@v3
+      - name: SAST
+        uses: jpetrucciani/bandit-check@master
+        continue-on-error: true 
+        with:
+          path: 'app'
+          bandit_flags: '-lll -o output.json -f json'
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: bandit_scan
+          path: output.json
+
+  INFRA:
+    runs-on: ubuntu-latest
+    name: Infrastructure misconfig detection
+    steps:
+      - uses: actions/checkout@v3
+      - name: Checkov
+        uses: bridgecrewio/checkov-action@master
+        continue-on-error: true 
+        with:
+          directory: .
+          framework: all
+          quiet: true
+          soft_fail: true
+          download_external_modules: true
+          log_level: INFO # One of: INFO, WARNING, DEBUG
+          output_format: sarif
+      - name: Upload Sarif file
+        if: always()
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: results.sarif        
+
+  SCA:
+    runs-on: ubuntu-latest
+    name: Dependency-Checker
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+        run: |
+          pip install safety
+      - name: Scan using safety
+        continue-on-error: true
+        run: |
+          safety check --full-report
+          safety check --json
+        
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: safety
+          path: output.json
+
+  CONTAINER:
+    name: Security Trivy
+    needs: [SAST,SECRET,SCA,INFRA]
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build an image from Dockerfile
+        run: |
+          docker build -t trivy-image:${{ github.sha }} .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        continue-on-error: true
+        with:
+          image-ref: 'trivy-image:${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
