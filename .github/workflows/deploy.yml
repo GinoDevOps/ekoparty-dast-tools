@@ -10,7 +10,6 @@ on:
     branches: [master]    
 
 jobs:
-
   security_sast:
     uses: ./.github/workflows/security_sast.yml
 
@@ -28,5 +27,5 @@ jobs:
           remote_branch: "master"
           usedocker: true
 
-  security_dast:
-    uses: ./.github/workflows/security_dast.yml
+  # security_dast:
+  #   uses: ./.github/workflows/security_dast.yml
