@@ -47,3 +47,12 @@ jobs:
           docker_name: 'owasp/zap2docker-stable'
           format: openapi
           target: 'https://vulxss2022.herokuapp.com/openapi.json'
+
+  stackhawk-hawkscan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3  
+    - uses: stackhawk/hawkscan-action@v2.0.0
+      with:
+        apiKey: ${{ secrets.HAWK_API_KEY }}
+        configurationFiles: stackhawk.yml
