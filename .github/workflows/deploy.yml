@@ -27,11 +27,8 @@ jobs:
         with:
           ref: master
       - name: ZAP Scan
-        uses: zaproxy/action-baseline@v0.7.0
+        uses: zaproxy/action-full-scan@v0.4.0
         with:
-          token: ${{ secrets.GITHUBTOKEN }}
           docker_name: 'owasp/zap2docker-stable'
-          target: 'https://ekoparty-dast.herokuapp.com/'
-          rules_file_name: '.zap/rules.tsv'
-          cmd_options: '-a'          
+          target: 'https://ekoparty-dast.herokuapp.com/'       
 
